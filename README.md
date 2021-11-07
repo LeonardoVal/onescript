@@ -1,2 +1,3 @@
-# onescript
-OneScript language project
+# Onescript
+
+OneScript language project.
