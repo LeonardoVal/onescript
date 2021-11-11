@@ -32,12 +32,22 @@ const processors = {
     return { type: 'Literal', value: raw === 'true', raw };
   },
 
+  BreakStatement(_break, _label) {
+    const label = _label === ';' ? null : _label;
+    return { type: 'BreakStatement', label };
+  },
+
   CallExpression(callee, args) {
     return { type: 'CallExpression', callee, arguments: args };
   },
 
   ConditionalExpression(test, _qm, consequent, _colon, alternate) {
     return { type: 'ConditionalExpression', test, consequent, alternate };
+  },
+
+  ContinueStatement(_continue, _label) {
+    const label = _label === ';' ? null : _label;
+    return { type: 'ContinueStatement', label };
   },
 
   ExpressionStatement(expression) {

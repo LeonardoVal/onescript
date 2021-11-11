@@ -29,7 +29,7 @@ const STMTS = `
   return(1);
   if(1)x=1;
   if(1)x=0;else{x=1;}
-  while(0){}
+  while(0){} while(0){continue;} while(0){break;}
   var\tx; var\tx=1; let\tx; let\tx=1; const\tx=1;
 `.trim().split(/[ \n\r]+/);
 
