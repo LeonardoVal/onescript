@@ -69,6 +69,10 @@ const processors = {
     return { type: 'MemberExpression', object, property, computed };
   },
 
+  NullLiteral() {
+    return { type: 'Literal', value: null };
+  },
+
   Number(raw) {
     const value = /n$/.test(raw) ? BigInt(raw.replace(/n$/, '')) : +raw;
     return { type: 'Literal', value, raw };
@@ -169,9 +173,6 @@ const processors = {
   },
 
   VariableName(name) {
-    if (/^(true|false|null)$/.test(name)) {
-      return { type: 'Literal', value: JSON.parse(name) };
-    }
     if (name === 'this') {
       return { type: 'ThisExpression' };
     }

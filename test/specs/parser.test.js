@@ -4,12 +4,12 @@ const { parse: acornParse } = require('acorn');
 const cloneRoot = require('espurify');
 const { parse } = require('../../src/parser/parser');
 
-// TODO null this obj?.prop obj?.['prop']
+// TODO this super obj?.prop obj?.['prop']
 const EXPS = `
   0 1 3.45 0.8e12 1.22e-7 0xC4f3 100n
   "" "x" "a\\t\\"." '' 'x' '<\\x12\\u1234>'
   /[0-9]+/ /\\d+/gi
-  true false NaN Infinity
+  true false null NaN Infinity
   +1 -2.3 !false !!true ~1 ++pre --pre post++ post--
   1+2 1-2 1*2 1/2 1%2 1**2 1<<2 1>>2 1>>>2
   1==2 1!=2 1===2 1!==2 1<2 1<=2 1>2 1>=2
@@ -24,7 +24,6 @@ const EXPS = `
   f() f(1) f(1,2) obj.meth() obj.meth(1,2)
 `.trim().split(/[ \n\r]+/);
 
-// TODO if(1)x=2;
 const STMTS = `
   return(1);
   if(1)x=1;

@@ -248,7 +248,7 @@ expressionNoComma {
   VariableName |
   boolean |
   kw<"this"> |
-  kw<"null"> |
+  nullValue |
   kw<"super"> |
   RegExp |
   ArrayExpression |
@@ -502,6 +502,8 @@ tsPkwMod<term> { @extend[@name={term},@dialect=ts]<word, term> }
 semi { ";" | insertSemi }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
+
+nullValue { @specialize[@name=NullLiteral]<identifier, "null"> }
 
 Star { "*" }
 
