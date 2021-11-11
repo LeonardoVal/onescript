@@ -4,12 +4,12 @@ const { parse: acornParse } = require('acorn');
 const cloneRoot = require('espurify');
 const { parse } = require('../../src/parser/parser');
 
-// TODO obj?.prop obj?.['prop']
+// TODO null this obj?.prop obj?.['prop']
 const EXPS = `
   0 1 3.45 0.8e12 1.22e-7 0xC4f3 100n
   "" "x" "a\\t\\"." '' 'x' '<\\x12\\u1234>'
   /[0-9]+/ /\\d+/gi
-  true false null NaN Infinity this
+  true false NaN Infinity
   +1 -2.3 !false !!true ~1 ++pre --pre post++ post--
   1+2 1-2 1*2 1/2 1%2 1**2 1<<2 1>>2 1>>>2
   1==2 1!=2 1===2 1!==2 1<2 1<=2 1>2 1>=2
@@ -27,6 +27,10 @@ const EXPS = `
 // TODO if(1)x=2;
 const STMTS = `
   return(1);
+  if(1)x=1;
+  if(1)x=0;else{x=1;}
+  while(0){}
+  var\tx; var\tx=1; let\tx; let\tx=1; const\tx=1;
 `.trim().split(/[ \n\r]+/);
 
 describe('Lezer parser', () => {

@@ -50,7 +50,7 @@ const processors = {
     return { type: 'FunctionDeclaration', id, params, body, async, generator };
   },
 
-  IfStatement(_if, test, consequent, alternate = null) {
+  IfStatement(_if, test, consequent, _else, alternate = null) {
     return { type: 'IfStatement', test, consequent, alternate };
   },
 
@@ -142,7 +142,7 @@ const processors = {
     let op;
     do {
       const decl = defs.shift();
-      [, op] = defs.shift();
+      op = defs.shift();
       if (op === '=') {
         decl.init = defs.shift();
         op = defs.shift();
@@ -166,6 +166,10 @@ const processors = {
       return { type: 'ThisExpression' };
     }
     return { type: 'Identifier', name };
+  },
+
+  WhileStatement(_while, test, body) {
+    return { type: 'WhileStatement', test, body };
   },
 }; // processors
 
