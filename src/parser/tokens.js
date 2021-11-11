@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 /* Hand-written tokenizers for JavaScript tokens that can't be
    expressed by lezer's built-in tokenizer. */
 
@@ -27,17 +28,15 @@ const backslash = 92;
 const trackNewline = new ContextTracker({
   start: false,
   shift(context, term) {
-    return term === LineComment || term === BlockComment
-      || (term === spaces ? context : term === newline);
+    return term == LineComment || term == BlockComment || term == spaces
+      ? context : term == newline;
   },
   strict: false,
 });
 
 const insertSemicolon = new ExternalTokenizer((input, stack) => {
   const { next } = input;
-  if ((next === braceR || next === -1 || stack.context)
-    && stack.canShift(insertSemi)
-  ) {
+  if ((next == braceR || next == -1 || stack.context) && stack.canShift(insertSemi)) {
     input.acceptToken(insertSemi);
   }
 }, { contextual: true, fallback: true });
@@ -47,20 +46,20 @@ const noSemicolon = new ExternalTokenizer((input, stack) => {
   let after;
   if (space.indexOf(next) > -1) return;
   // eslint-disable-next-line no-cond-assign
-  if (next === slash && ((after = input.peek(1)) === slash || after === star)) {
-    return;
-  }
-  if (next !== braceR && next !== semicolon && next !== -1 && !stack.context
-      && stack.canShift(noSemi)) {
+  if (next == slash && ((after = input.peek(1)) == slash || after == star)) return;
+  if (
+    next != braceR && next != semicolon && next != -1 && !stack.context
+    && stack.canShift(noSemi)
+  ) {
     input.acceptToken(noSemi);
   }
 }, { contextual: true });
 
 const incdecToken = new ExternalTokenizer((input, stack) => {
   const { next } = input;
-  if (next === plus || next === minus) {
+  if (next == plus || next == minus) {
     input.advance();
-    if (next === input.next) {
+    if (next == input.next) {
       input.advance();
       const mayPostfix = !stack.context && stack.canShift(incdec);
       input.acceptToken(mayPostfix ? incdec : incdecPrefix);
@@ -69,36 +68,34 @@ const incdecToken = new ExternalTokenizer((input, stack) => {
 }, { contextual: true });
 
 const template = new ExternalTokenizer((input) => {
-  // eslint-disable-next-line no-constant-condition
-  for (let afterDollar = false, i = 0; true; i += 1) {
+  for (let afterDollar = false, i = 0; ; i += 1) {
     const { next } = input;
     if (next < 0) {
       if (i) input.acceptToken(templateContent);
       break;
-    } else if (next === backtick) {
+    } else if (next == backtick) {
       if (i) input.acceptToken(templateContent);
       else input.acceptToken(templateEnd, 1);
       break;
-    } else if (next === braceL && afterDollar) {
-      if (i === 1) input.acceptToken(templateDollarBrace, 1);
+    } else if (next == braceL && afterDollar) {
+      if (i == 1) input.acceptToken(templateDollarBrace, 1);
       else input.acceptToken(templateContent, -1);
       break;
-    } else if (next === 10 /* "\n" */ && i) {
+    } else if (next == 10 /* "\n" */ && i) {
       // Break up template strings on lines, to avoid huge tokens
       input.advance();
       input.acceptToken(templateContent);
       break;
-    } else if (next === backslash) {
+    } else if (next == backslash) {
       input.advance();
     }
-    afterDollar = next === dollar;
+    afterDollar = next == dollar;
     input.advance();
   }
 });
 
 function tsExtends(value, stack) {
-  return value === 'extends'
-    && (stack.dialectEnabled(Dialect_ts) ? TSExtends : -1);
+  return value == 'extends' && stack.dialectEnabled(Dialect_ts) ? TSExtends : -1;
 }
 
 module.exports = {

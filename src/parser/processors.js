@@ -1,9 +1,3 @@
-const ID_LIKE_VALUES = {
-  false: false,
-  null: null,
-  true: true,
-};
-
 /** Processor functions for each parse tree node in the Lezer grammar. They
  * return an object similar to the ESTree representation, or a string if the
  * node really represents a toke rather than an AST node.
@@ -11,6 +5,10 @@ const ID_LIKE_VALUES = {
  * Please keep the functions sorted by name.
 */
 const processors = {
+  ArgList(_op, ...args) {
+    return args.filter((arg) => arg !== ',' && arg !== ')');
+  },
+
   ArrayExpression(_ob, ...elements) {
     elements = elements.filter((elem) => elem !== ',' && elem !== ']');
     return { type: 'ArrayExpression', elements };
@@ -25,8 +23,17 @@ const processors = {
     return { type, operator: op, left, right };
   },
 
+  Block(_ob, ...parts) {
+    const body = parts.filter((part) => part !== '}');
+    return { type: 'BlockStatement', body };
+  },
+
   BooleanLiteral(raw) {
     return { type: 'Literal', value: raw === 'true', raw };
+  },
+
+  CallExpression(callee, args) {
+    return { type: 'CallExpression', callee, arguments: args };
   },
 
   ConditionalExpression(test, _qm, consequent, _colon, alternate) {
@@ -35,6 +42,12 @@ const processors = {
 
   ExpressionStatement(expression) {
     return { type: 'ExpressionStatement', expression };
+  },
+
+  FunctionDeclaration(_kw, { id }, params, body) {
+    const async = false;
+    const generator = false;
+    return { type: 'FunctionDeclaration', id, params, body, async, generator };
   },
 
   IfStatement(_if, test, consequent, alternate = null) {
@@ -54,6 +67,10 @@ const processors = {
   ObjectExpression(_ob, ...properties) {
     properties = properties.filter((prop) => prop !== ',' && prop !== '}');
     return { type: 'ObjectExpression', properties };
+  },
+
+  ParamList(_op, ...parts) {
+    return parts.filter((part) => part !== ')');
   },
 
   ParenthesizedExpression(_op, exp, _cp) {
@@ -102,6 +119,11 @@ const processors = {
     return { type: 'Program', sourceType: 'script', body };
   },
 
+  SequenceExpression(...exps) {
+    const expressions = exps.filter((part) => part !== ',');
+    return { type: 'SequenceExpression', expressions };
+  },
+
   String(raw) {
     // eslint-disable-next-line no-eval
     return { type: 'Literal', value: eval(raw), raw };
@@ -137,8 +159,8 @@ const processors = {
   },
 
   VariableName(name) {
-    if (typeof ID_LIKE_VALUES[name] !== 'undefined') {
-      return { type: 'Literal', value: ID_LIKE_VALUES[name] };
+    if (/^(true|false|null)$/.test(name)) {
+      return { type: 'Literal', value: JSON.parse(name) };
     }
     if (name === 'this') {
       return { type: 'ThisExpression' };

@@ -4,7 +4,7 @@ const { parse: acornParse } = require('acorn');
 const cloneRoot = require('espurify');
 const { parse } = require('../../src/parser/parser');
 
-// TODO obj?.prop obj?.['prop'] x??=3 x\tin\t0 typeof\tx
+// TODO obj?.prop obj?.['prop']
 const EXPS = `
   0 1 3.45 0.8e12 1.22e-7 0xC4f3 100n
   "" "x" "a\\t\\"." '' 'x' '<\\x12\\u1234>'
@@ -14,18 +14,39 @@ const EXPS = `
   1+2 1-2 1*2 1/2 1%2 1**2 1<<2 1>>2 1>>>2
   1==2 1!=2 1===2 1!==2 1<2 1<=2 1>2 1>=2
   1&2 1|2 1&&2 1||2 1^2 1??2
-  1?2:3
+  1?2:3 1,2
+  typeof\tx void\t0
+  x\tin\t0  
   [] [0] [3,] [0,1,2]
-  {} {x:1} {a:7,} {'x':1,['y']:2}
+  {} {x:1} {null:7,} {'x':1,['y']:2}
   obj.prop obj.x.y obj['prop'] obj[0][1] obj[0].x obj.x[0]
-  x=1 x+=1 x-=1 x*=1 x/=1 x**=1 x<<=2 x>>=2 x>>>=2 x&=3 x|=3 x^=3
+  x=1 x+=1 x-=1 x*=1 x/=1 x**=1 x<<=2 x>>=2 x>>>=2 x&=3 x|=3 x^=3 x&&=4 x||=4 x??=4
+  f() f(1) f(1,2) obj.meth() obj.meth(1,2)
+`.trim().split(/[ \n\r]+/);
+
+// TODO if(1)x=2;
+const STMTS = `
+  return(1);
 `.trim().split(/[ \n\r]+/);
 
 describe('Lezer parser', () => {
   it('parses expresions properly', () => {
     // Expression tests cases, as expression statements.
     EXPS.map((exp) => `(${exp});`).forEach((test) => {
-      const expected = cloneRoot(acornParse(`${test}`, { ecmaVersion: 2020 }));
+      const expected = cloneRoot(acornParse(`${test}`, { ecmaVersion: 2021 }));
+      let received;
+      try {
+        received = cloneRoot(parse(`${test}`));
+      } catch (error) {
+        throw new Error(`Lezer failed!\n${test}\n\n${inspect(expected, false, 10)}\n\n${error}`);
+      }
+      expect(received).toEqual(expected);
+    });
+  });
+
+  it('parses statements properly', () => {
+    STMTS.map((stmt) => `function _() {${stmt}}`).forEach((test) => {
+      const expected = cloneRoot(acornParse(`${test}`, { ecmaVersion: 2021 }));
       let received;
       try {
         received = cloneRoot(parse(`${test}`));
