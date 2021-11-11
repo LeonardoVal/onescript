@@ -11,13 +11,26 @@ const ID_LIKE_VALUES = {
  * Please keep the functions sorted by name.
 */
 const processors = {
+  ArrayExpression(_ob, ...elements) {
+    elements = elements.filter((elem) => elem !== ',' && elem !== ']');
+    return { type: 'ArrayExpression', elements };
+  },
+
+  AssignmentExpression(left, operator, right) {
+    return { type: 'AssignmentExpression', left, operator, right };
+  },
+
   BinaryExpression(left, op, right) {
-    const type = /&&|\|\|/.test(op) ? 'LogicalExpression' : 'BinaryExpression';
+    const type = /&&|\|\||\?\?/.test(op) ? 'LogicalExpression' : 'BinaryExpression';
     return { type, operator: op, left, right };
   },
 
   BooleanLiteral(raw) {
     return { type: 'Literal', value: raw === 'true', raw };
+  },
+
+  ConditionalExpression(test, _qm, consequent, _colon, alternate) {
+    return { type: 'ConditionalExpression', test, consequent, alternate };
   },
 
   ExpressionStatement(expression) {
@@ -28,11 +41,18 @@ const processors = {
     return { type: 'IfStatement', test, consequent, alternate };
   },
 
-  Number(raw) {
-    return { type: 'Literal', value: +raw, raw };
+  MemberExpression(object, op, property) {
+    const computed = op === '[';
+    return { type: 'MemberExpression', object, property, computed };
   },
 
-  ObjectExpression(_ob, properties, _cb) {
+  Number(raw) {
+    const value = /n$/.test(raw) ? BigInt(raw.replace(/n$/, '')) : +raw;
+    return { type: 'Literal', value, raw };
+  },
+
+  ObjectExpression(_ob, ...properties) {
+    properties = properties.filter((prop) => prop !== ',' && prop !== '}');
     return { type: 'ObjectExpression', properties };
   },
 
@@ -45,8 +65,22 @@ const processors = {
     return { type, prefix: false, operator, argument };
   },
 
-  Property(key, _colon, value) {
-    return { type: 'Property', key, value };
+  Property(...args) {
+    let computed = false;
+    const kind = 'init';
+    const method = false;
+    const shorthand = false;
+    if (args[0] === '[') {
+      const [_ob, key, _cb, _colon, value] = args;
+      computed = true;
+      return { type: 'Property', key, value, computed, kind, method, shorthand };
+    }
+    const [key, _colon, value] = args;
+    return { type: 'Property', key, value, computed, kind, method, shorthand };
+  },
+
+  PropertyName(name) {
+    return { type: 'Identifier', name };
   },
 
   PropertyNameDefinition(name) {
@@ -113,7 +147,7 @@ const processors = {
   },
 }; // processors
 
-'ArithOp BitOp CompareOp Equals LogicOp'
+'ArithOp BitOp CompareOp Equals LogicOp UpdateOp'
   .trim().split(/\s+/).forEach((noterm) => {
     processors[noterm] = (token) => token;
   });

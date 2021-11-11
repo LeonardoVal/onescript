@@ -13,6 +13,7 @@
     "rules": {
       "camelcase": "off",
       "no-unused-vars": "off",
+      "no-param-reassign": "off",
       "object-curly-newline": "off"
     }
 }
