@@ -11,6 +11,8 @@
         "ecmaVersion": 2020
     },
     "rules": {
-      "camelcase": "off"
+      "camelcase": "off",
+      "no-unused-vars": "off",
+      "object-curly-newline": "off"
     }
 }

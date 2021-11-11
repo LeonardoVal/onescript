@@ -1,4 +1,8 @@
-/* eslint-disable no-unused-vars, object-curly-newline */
+const ID_LIKE_VALUES = {
+  false: false,
+  null: null,
+  true: true,
+};
 
 /** Processor functions for each parse tree node in the Lezer grammar. They
  * return an object similar to the ESTree representation, or a string if the
@@ -6,21 +10,14 @@
  *
  * Please keep the functions sorted by name.
 */
-module.exports = {
+const processors = {
   BinaryExpression(left, op, right) {
-    return { type: 'BinaryExpression', operator: op, left, right };
+    const type = /&&|\|\|/.test(op) ? 'LogicalExpression' : 'BinaryExpression';
+    return { type, operator: op, left, right };
   },
 
   BooleanLiteral(raw) {
     return { type: 'Literal', value: raw === 'true', raw };
-  },
-
-  CompareOp(op) {
-    return op;
-  },
-
-  Equals() {
-    return '=';
   },
 
   ExpressionStatement(expression) {
@@ -43,6 +40,11 @@ module.exports = {
     return exp;
   },
 
+  PostfixExpression(argument, operator) {
+    const type = 'UpdateExpression';
+    return { type, prefix: false, operator, argument };
+  },
+
   Property(key, _colon, value) {
     return { type: 'Property', key, value };
   },
@@ -53,9 +55,9 @@ module.exports = {
 
   RegExp(raw) {
     // eslint-disable-next-line no-eval
-    const reObj = eval(raw);
-    const regex = { pattern: reObj.source, flags: reObj.flags };
-    return { type: 'Literal', raw, regex };
+    const value = eval(raw);
+    const regex = { pattern: value.source, flags: value.flags };
+    return { type: 'Literal', raw, value, regex };
   },
 
   ReturnStatement(_return, argument) {
@@ -69,6 +71,14 @@ module.exports = {
   String(raw) {
     // eslint-disable-next-line no-eval
     return { type: 'Literal', value: eval(raw), raw };
+  },
+
+  UnaryExpression(t1, t2) {
+    const prefix = typeof t1 === 'string';
+    const operator = prefix ? t1 : t2;
+    const argument = prefix ? t2 : t1;
+    const type = /--|\+\+/.test(operator) ? 'UpdateExpression' : 'UnaryExpression';
+    return { type, prefix, operator, argument };
   },
 
   VariableDeclaration(kind, ...defs) {
@@ -93,6 +103,19 @@ module.exports = {
   },
 
   VariableName(name) {
+    if (typeof ID_LIKE_VALUES[name] !== 'undefined') {
+      return { type: 'Literal', value: ID_LIKE_VALUES[name] };
+    }
+    if (name === 'this') {
+      return { type: 'ThisExpression' };
+    }
     return { type: 'Identifier', name };
   },
-}; // module.exports
+}; // processors
+
+'ArithOp BitOp CompareOp Equals LogicOp'
+  .trim().split(/\s+/).forEach((noterm) => {
+    processors[noterm] = (token) => token;
+  });
+
+module.exports = processors;
