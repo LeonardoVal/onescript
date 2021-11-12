@@ -9,7 +9,7 @@ const EXPS = `
   0 1 3.45 0.8e12 1.22e-7 0xC4f3 100n
   "" "x" "a\\t\\"." '' 'x' '<\\x12\\u1234>'
   /[0-9]+/ /\\d+/gi
-  true false null NaN Infinity
+  true false null NaN Infinity undefined
   +1 -2.3 !false !!true ~1 ++pre --pre post++ post--
   1+2 1-2 1*2 1/2 1%2 1**2 1<<2 1>>2 1>>>2
   1==2 1!=2 1===2 1!==2 1<2 1<=2 1>2 1>=2
@@ -17,7 +17,7 @@ const EXPS = `
   1?2:3 1,2
   typeof(x) void(0)
   (x)in(0) (x)instanceof(y)  
-  [] [0] [3,] [0,1,2]
+  [] [0] [3,] [0,1,2] [...'abc'] [1,2,...''] [...'',...''] [1,2,] [,,]
   {} {x:1} {null:7,} {'x':1,['y']:2}
   obj.prop obj.x.y obj['prop'] obj[0][1] obj[0].x obj.x[0]
   x=1 x+=1 x-=1 x*=1 x/=1 x**=1 x<<=2 x>>=2 x>>>=2 x&=3 x|=3 x^=3 x&&=4 x||=4 x??=4

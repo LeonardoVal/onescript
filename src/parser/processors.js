@@ -24,8 +24,23 @@ const processors = {
     return args.filter((arg) => arg !== ',' && arg !== ')');
   },
 
-  ArrayExpression(_ob, ...elements) {
-    elements = elements.filter((elem) => elem !== ',' && elem !== ']');
+  ArrayExpression(...parts) {
+    const elements = [];
+    for (let i = 0; i < parts.length; i += 1) {
+      const part = parts[i];
+      if (part !== ']') {
+        if (part === ',' || part === '[') {
+          if (parts[i + 1] === ',') {
+            elements.push(null); // Empty element.
+          }
+        } else if (part === '...') {
+          i += 1;
+          elements.push({ type: 'SpreadElement', argument: parts[i] });
+        } else {
+          elements.push(part);
+        }
+      }
+    }
     return { type: 'ArrayExpression', elements };
   },
 
@@ -264,7 +279,7 @@ const processors = {
   },
 }; // processors
 
-'ArithOp Arrow BitOp CompareOp Equals LogicOp Star UpdateOp'
+'ArithOp Arrow BitOp CompareOp Equals LogicOp Spread Star UpdateOp'
   .trim().split(/\s+/).forEach((noterm) => {
     processors[noterm] = (token) => token;
   });
