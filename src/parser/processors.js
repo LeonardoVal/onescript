@@ -83,6 +83,14 @@ const processors = {
     return { type: 'ContinueStatement', label };
   },
 
+  DebuggerStatement() {
+    return { type: 'DebuggerStatement' };
+  },
+
+  DoStatement(_do, body, _while, test) {
+    return { type: 'DoWhileStatement', body, test };
+  },
+
   ExpressionStatement(expression) {
     return { type: 'ExpressionStatement', expression };
   },
@@ -106,6 +114,10 @@ const processors = {
 
   NullLiteral() {
     return { type: 'Literal', value: null };
+  },
+
+  NewExpression(_new, callee, args) {
+    return { type: 'NewExpression', callee, arguments: args };
   },
 
   Number(raw) {
@@ -178,6 +190,27 @@ const processors = {
     return { type: 'Literal', value: eval(raw), raw };
   },
 
+  ThrowStatement(_throw, argument) {
+    return { type: 'ThrowStatement', argument };
+  },
+
+  TryStatement(_try, block, ...parts) {
+    let handler = null;
+    if (parts[0] === 'catch') {
+      parts.shift();
+      let param = null;
+      if (parts[0] === '(') {
+        [, param] = parts.splice(0, 3);
+      }
+      handler = { type: 'CatchClause', param, body: parts.shift() };
+    }
+    let finalizer = null;
+    if (parts[0] === 'finally') {
+      [, finalizer] = parts.splice(0, 2);
+    }
+    return { type: 'TryStatement', block, handler, finalizer };
+  },
+
   UnaryExpression(t1, t2) {
     const prefix = typeof t1 === 'string';
     const operator = prefix ? t1 : t2;
@@ -224,6 +257,10 @@ const processors = {
 
   WhileStatement(_while, test, body) {
     return { type: 'WhileStatement', test, body };
+  },
+
+  WithStatement(_with, object, body) {
+    return { type: 'WithStatement', object, body };
   },
 }; // processors
 
