@@ -1,3 +1,18 @@
+const parseFunction = (parts) => {
+  const async = parts[0] === 'async';
+  if (async) {
+    parts.shift();
+  }
+  parts.shift(); // 'function'
+  const generator = parts[0] === '*';
+  if (generator) {
+    parts.shift();
+  }
+  const id = !Array.isArray(parts[0]) ? parts.shift() : null;
+  const [params, body] = parts;
+  return { id, params, body, generator, async };
+};
+
 /** Processor functions for each parse tree node in the Lezer grammar. They
  * return an object similar to the ESTree representation, or a string if the
  * node really represents a toke rather than an AST node.
@@ -14,13 +29,31 @@ const processors = {
     return { type: 'ArrayExpression', elements };
   },
 
+  ArrowFunction(...parts) {
+    const async = parts[0] === 'async';
+    if (async) {
+      parts.shift();
+    }
+    const [params, _arrow, body] = parts;
+    const id = null;
+    const expression = body.type !== 'BlockStatement';
+    const generator = false;
+    return {
+      type: 'ArrowFunctionExpression', async, params, body, id, expression, generator,
+    };
+  },
+
   AssignmentExpression(left, operator, right) {
     return { type: 'AssignmentExpression', left, operator, right };
   },
 
-  BinaryExpression(left, op, right) {
-    const type = /&&|\|\||\?\?/.test(op) ? 'LogicalExpression' : 'BinaryExpression';
-    return { type, operator: op, left, right };
+  BinaryExpression(left, operator, right) {
+    if (left?.name === 'yield' && operator === '*') {
+      return { type: 'YieldExpression', argument: right, delegate: true };
+    }
+    const type = /^(&&|\|\||\?\?)$/.test(operator) ? 'LogicalExpression'
+      : 'BinaryExpression';
+    return { type, operator, left, right };
   },
 
   Block(_ob, ...parts) {
@@ -54,10 +87,12 @@ const processors = {
     return { type: 'ExpressionStatement', expression };
   },
 
-  FunctionDeclaration(_kw, { id }, params, body) {
-    const async = false;
-    const generator = false;
-    return { type: 'FunctionDeclaration', id, params, body, async, generator };
+  FunctionDeclaration(...parts) {
+    return { ...parseFunction(parts), type: 'FunctionDeclaration' };
+  },
+
+  FunctionExpression(...parts) {
+    return { ...parseFunction(parts), type: 'FunctionExpression' };
   },
 
   IfStatement(_if, test, consequent, _else, alternate = null) {
@@ -84,7 +119,7 @@ const processors = {
   },
 
   ParamList(_op, ...parts) {
-    return parts.filter((part) => part !== ')');
+    return parts.filter((part) => part !== ',' && part !== ')');
   },
 
   ParenthesizedExpression(_op, exp, _cp) {
@@ -147,7 +182,15 @@ const processors = {
     const prefix = typeof t1 === 'string';
     const operator = prefix ? t1 : t2;
     const argument = prefix ? t2 : t1;
-    const type = /--|\+\+/.test(operator) ? 'UpdateExpression' : 'UnaryExpression';
+    if (operator === 'await') {
+      return { type: 'AwaitExpression', argument };
+    }
+    if (operator === 'yield') {
+      const delegate = false;
+      return { type: 'YieldExpression', argument, delegate };
+    }
+    const type = /^(--|\+\+)$/.test(operator) ? 'UpdateExpression'
+      : 'UnaryExpression';
     return { type, prefix, operator, argument };
   },
 
@@ -155,7 +198,7 @@ const processors = {
     const declarations = [];
     let op;
     do {
-      const decl = defs.shift();
+      const decl = { type: 'VariableDeclarator', id: defs.shift() };
       op = defs.shift();
       if (op === '=') {
         decl.init = defs.shift();
@@ -169,7 +212,7 @@ const processors = {
   },
 
   VariableDefinition(name) {
-    return { type: 'VariableDeclarator', id: { type: 'Identifier', name } };
+    return { type: 'Identifier', name };
   },
 
   VariableName(name) {
@@ -184,7 +227,7 @@ const processors = {
   },
 }; // processors
 
-'ArithOp BitOp CompareOp Equals LogicOp UpdateOp'
+'ArithOp Arrow BitOp CompareOp Equals LogicOp Star UpdateOp'
   .trim().split(/\s+/).forEach((noterm) => {
     processors[noterm] = (token) => token;
   });
