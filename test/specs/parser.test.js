@@ -24,6 +24,7 @@ const EXPS = `
   f() f(1) f(1,2) obj.meth() obj.meth(1,2) new\tC() new\tC(1,2)
   function(){} function\tf(x,y){} async\tfunction(){} function*(){} async\tfunction*(){}
   ()=>{} (x)=>x (x,y)=>(x+y) async()=>{}
+  class{} class\tC{} class\textends\tB{} class\tC\textends\tB{}
 `.trim().split(/[ \n\r]+/);
 
 const STMTS = `
@@ -34,6 +35,7 @@ const STMTS = `
   var\tx; var\tx=1; let\tx; let\tx=1; const\tx=1;
   try{}catch(e){} try{}catch{} try{}finally{} try{}catch{}finally{}
   with(x){} debugger;
+  class\tC{} class\tC\textends\tB{}
 `.trim().split(/[ \n\r]+/);
 
 const testCase = (test) => {

@@ -89,6 +89,24 @@ const processors = {
     return { type: 'CallExpression', callee, arguments: args };
   },
 
+  ClassBody(_ob, body, _cb) {
+    return { type: 'ClassBody', body: _cb ? body : [] };
+  },
+
+  ClassDeclaration(_class, id, ...parts) {
+    const body = parts.pop();
+    const superClass = parts[0] === 'extends' ? parts[1] : null;
+    return { type: 'ClassDeclaration', body, id, superClass };
+  },
+
+  ClassExpression(_class, ...parts) {
+    const body = parts.pop();
+    const superClass = parts[0] === 'extends' ? parts[1]
+      : (parts[1] === 'extends' ? parts[2] : null);
+    const id = parts.length === 1 || parts[1] === 'extends' ? parts[0] : null;
+    return { type: 'ClassExpression', body, id, superClass };
+  },
+
   ConditionalExpression(test, _qm, consequent, _colon, alternate) {
     return { type: 'ConditionalExpression', test, consequent, alternate };
   },
