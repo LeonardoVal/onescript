@@ -12,8 +12,9 @@
     },
     "rules": {
       "camelcase": "off",
-      "no-unused-vars": "off",
+      "no-nested-ternary": "off",
       "no-param-reassign": "off",
+      "no-unused-vars": "off",
       "object-curly-newline": "off"
     }
 }
