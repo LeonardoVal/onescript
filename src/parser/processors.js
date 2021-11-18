@@ -128,6 +128,33 @@ const processors = {
     return { type: 'ExpressionStatement', expression };
   },
 
+  ForInSpec(_op, left, _in, right) {
+    return { type: 'ForInStatement', left, right };
+  },
+
+  ForOfSpec(_op, left, _of, right) {
+    return { type: 'ForOfStatement', left, right };
+  },
+
+  ForSpec(_op, init, ...parts) {
+    return {
+      type: 'ForStatement',
+      init: init === ';' ? null : init,
+      test: parts[0] === ';' ? null : parts.shift(),
+      update: parts[1] === ')' ? null : parts[1],
+    };
+  },
+
+  ForStatement(_for, ...parts) {
+    const async = parts[0] === 'await' ? !!(parts.shift()) : false;
+    const [header, body] = parts;
+    if (header.type === 'ForOfStatement') {
+      header.await = async;
+    }
+    header.body = body;
+    return header;
+  },
+
   FunctionDeclaration(...parts) {
     return { ...parseFunction(parts), type: 'FunctionDeclaration' };
   },

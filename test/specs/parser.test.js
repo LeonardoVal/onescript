@@ -29,10 +29,12 @@ const EXPS = `
 
 const STMTS = `
   return(1); throw(x);
+  var\tx; var\tx=1; let\tx; let\tx=1; const\tx=1;
   if(1)x=1;
   if(1)x=0;else{x=1;}
   while(0){} while(0){continue;} while(0){break;} do{}while(0);
-  var\tx; var\tx=1; let\tx; let\tx=1; const\tx=1;
+  for(;;){} for(let\tx=0;;){} for(let\tx=0;x<7;){} for(let\tx=0;x<7;x++){}
+  for(x\tin\ty){} for(x\tof\ty){}
   try{}catch(e){} try{}catch{} try{}finally{} try{}catch{}finally{}
   with(x){} debugger;
   class\tC{} class\tC\textends\tB{}
@@ -67,7 +69,7 @@ describe('Lezer parser', () => {
 
   it('parses async statements properly', () => {
     [
-      'await x;',
+      'await x;', 'for\tawait(x\tof\ty){}',
     ].map((stmt) => `async function _() {${stmt}}`).forEach(testCase);
   });
 });
