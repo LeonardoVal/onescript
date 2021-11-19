@@ -35,6 +35,7 @@ const STMTS = `
   while(0){} while(0){continue;} while(0){break;} do{}while(0);
   for(;;){} for(let\tx=0;;){} for(let\tx=0;x<7;){} for(let\tx=0;x<7;x++){}
   for(x\tin\ty){} for(x\tof\ty){}
+  switch(x){} switch(x){case\ty:{}} switch(x){case\ty:1;2;case\tz:3;} switch(x){case\ty:1;default:2;}
   try{}catch(e){} try{}catch{} try{}finally{} try{}catch{}finally{}
   with(x){} debugger;
   class\tC{} class\tC\textends\tB{}

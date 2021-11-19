@@ -89,6 +89,10 @@ const processors = {
     return { type: 'CallExpression', callee, arguments: args };
   },
 
+  CaseLabel(_case, test, _colon) {
+    return { type: 'SwitchCase', test };
+  },
+
   ClassBody(_ob, body, _cb) {
     return { type: 'ClassBody', body: _cb ? body : [] };
   },
@@ -118,6 +122,10 @@ const processors = {
 
   DebuggerStatement() {
     return { type: 'DebuggerStatement' };
+  },
+
+  DefaultLabel(_default, _colon) {
+    return { type: 'SwitchCase', test: null };
   },
 
   DoStatement(_do, body, _while, test) {
@@ -237,6 +245,7 @@ const processors = {
   },
 
   Script(...body) {
+    body = body.filter((stmt) => stmt !== ';');
     return { type: 'Program', sourceType: 'script', body };
   },
 
@@ -248,6 +257,26 @@ const processors = {
   String(raw) {
     // eslint-disable-next-line no-eval
     return { type: 'Literal', value: eval(raw), raw };
+  },
+
+  SwitchStatement(_switch, discriminant, cases) {
+    return { type: 'SwitchStatement', discriminant, cases };
+  },
+
+  SwitchBody(_ob, ...parts) {
+    const cases = [];
+    for (let i = 0; i < parts.length; i += 1) {
+      const part = parts[i];
+      if (part.type === 'SwitchCase') {
+        part.consequent = [];
+        while (parts[i + 1] !== '}' && parts[i + 1].type !== 'SwitchCase') {
+          part.consequent.push(parts[i + 1]);
+          i += 1;
+        }
+        cases.push(part);
+      }
+    }
+    return cases;
   },
 
   ThrowStatement(_throw, argument) {
